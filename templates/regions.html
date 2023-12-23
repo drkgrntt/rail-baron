@@ -1,0 +1,16 @@
+<div class="mx-auto bg-white p-4 rounded-md shadow-md">
+  <h2 class="text-2xl font-bold mb-4 text-indigo-700">Regions</h1>
+
+  <div class="grid grid-cols-2 gap-2">
+    {{ range $oddOrEven, $cities := .Regions }}
+    <div class="border p-4 rounded-md">
+      <h3 class="text-lg font-semibold mb-2 text-gray-800">{{ $oddOrEven }}</h3>
+      <ul>
+        {{ range $month, $region := $cities }}
+        <li>{{ $month }}: {{ $region }}</li>
+        {{ end }}
+      </ul>
+    </div>
+    {{ end }}
+  </div>
+</div>

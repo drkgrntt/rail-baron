@@ -5,24 +5,35 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"time"
 )
 
-type RegionCity struct {
-	Region string
-	City   string
+type PageData struct {
+	Regions       interface{}
+	Region        string
+	Cities        interface{}
+	City          string
+	RegionRedRoll int
+	RegionRoll    int
+	CityRedRoll   int
+	CityRoll      int
 }
 
 func main() {
 	templates := template.Must(template.ParseGlob("templates/*.html"))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		region := getRegion()
-		city := getCity(region)
+		region, regionRedRoll, regionRoll := getRegion()
+		city, cityRedRoll, cityRoll := getCity(region)
 
-		data := RegionCity{
-			Region: region,
-			City:   city,
+		data := PageData{
+			Regions:       regions,
+			Region:        region,
+			Cities:        cities,
+			City:          city,
+			RegionRedRoll: regionRedRoll,
+			RegionRoll:    regionRoll,
+			CityRedRoll:   cityRedRoll,
+			CityRoll:      cityRoll,
 		}
 
 		if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
@@ -31,12 +42,16 @@ func main() {
 	})
 
 	http.HandleFunc("/destination", func(w http.ResponseWriter, r *http.Request) {
-		region := getRegion()
-		city := getCity(region)
+		region, regionRedRoll, regionRoll := getRegion()
+		city, cityRedRoll, cityRoll := getCity(region)
 
-		data := RegionCity{
-			Region: region,
-			City:   city,
+		data := PageData{
+			Region:        region,
+			City:          city,
+			RegionRedRoll: regionRedRoll,
+			RegionRoll:    regionRoll,
+			CityRedRoll:   cityRedRoll,
+			CityRoll:      cityRoll,
 		}
 
 		if err := templates.ExecuteTemplate(w, "region-city.html", data); err != nil {
@@ -49,7 +64,7 @@ func main() {
 
 var cities = map[string]map[string]map[int]string{
 	"NorthEast": {
-		"odd": {
+		"Odd": {
 			2:  "New York",
 			3:  "New York",
 			4:  "New York",
@@ -62,7 +77,7 @@ var cities = map[string]map[string]map[int]string{
 			11: "New York",
 			12: "New York",
 		},
-		"even": {
+		"Even": {
 			2:  "New York",
 			3:  "Washington DC",
 			4:  "Pittsburgh",
@@ -77,7 +92,7 @@ var cities = map[string]map[string]map[int]string{
 		},
 	},
 	"SouthEast": {
-		"odd": {
+		"Odd": {
 			2:  "Charlotte",
 			3:  "Charlotte",
 			4:  "Chattanooga",
@@ -90,7 +105,7 @@ var cities = map[string]map[string]map[int]string{
 			11: "Knoxville",
 			12: "Mobile",
 		},
-		"even": {
+		"Even": {
 			2:  "Norfolk",
 			3:  "Norfolk",
 			4:  "Norfolk",
@@ -105,7 +120,7 @@ var cities = map[string]map[string]map[int]string{
 		},
 	},
 	"NorthCentral": {
-		"odd": {
+		"Odd": {
 			2:  "Cleveland",
 			3:  "Cleveland",
 			4:  "Cleveland",
@@ -118,7 +133,7 @@ var cities = map[string]map[string]map[int]string{
 			11: "Chicago",
 			12: "Milwaukee",
 		},
-		"even": {
+		"Even": {
 			2:  "Cincinnati",
 			3:  "Chicago",
 			4:  "Cincinnati",
@@ -133,7 +148,7 @@ var cities = map[string]map[string]map[int]string{
 		},
 	},
 	"SouthCentral": {
-		"odd": {
+		"Odd": {
 			2:  "Memphis",
 			3:  "Memphis",
 			4:  "Memphis",
@@ -146,7 +161,7 @@ var cities = map[string]map[string]map[int]string{
 			11: "Louisville",
 			12: "Memphis",
 		},
-		"even": {
+		"Even": {
 			2:  "Shreveport",
 			3:  "Shreveport",
 			4:  "Dallas",
@@ -161,7 +176,7 @@ var cities = map[string]map[string]map[int]string{
 		},
 	},
 	"Plains": {
-		"odd": {
+		"Odd": {
 			2:  "Kansas City",
 			3:  "Kansas City",
 			4:  "Denver",
@@ -174,7 +189,7 @@ var cities = map[string]map[string]map[int]string{
 			11: "Pueblo",
 			12: "Oklahoma City",
 		},
-		"even": {
+		"Even": {
 			2:  "Oklahoma City",
 			3:  "St. Paul",
 			4:  "Minneapolis",
@@ -189,7 +204,7 @@ var cities = map[string]map[string]map[int]string{
 		},
 	},
 	"NorthWest": {
-		"odd": {
+		"Odd": {
 			2:  "Spokane",
 			3:  "Spokane",
 			4:  "Seattle",
@@ -202,7 +217,7 @@ var cities = map[string]map[string]map[int]string{
 			11: "Billings",
 			12: "Spokane",
 		},
-		"even": {
+		"Even": {
 			2:  "Spokane",
 			3:  "Salt Lake City",
 			4:  "Salt Lake City",
@@ -217,7 +232,7 @@ var cities = map[string]map[string]map[int]string{
 		},
 	},
 	"SouthWest": {
-		"odd": {
+		"Odd": {
 			2:  "San Diego",
 			3:  "San Diego",
 			4:  "Reno",
@@ -230,7 +245,7 @@ var cities = map[string]map[string]map[int]string{
 			11: "Phoenix",
 			12: "Phoenix",
 		},
-		"even": {
+		"Even": {
 			2:  "Los Angeles",
 			3:  "Oakland",
 			4:  "Oakland",
@@ -246,17 +261,17 @@ var cities = map[string]map[string]map[int]string{
 	},
 }
 
-func getCity(region string) string {
+func getCity(region string) (city string, redRoll int, roll int) {
 
-	oddOrEven := rollRedDie()
-	roll := rollDice(2)
-	city := cities[region][oddOrEven][roll]
+	oddOrEven, redRoll := rollRedDie()
+	roll = rollDice(2)
+	city = cities[region][oddOrEven][roll]
 
-	return city
+	return
 }
 
 var regions = map[string]map[int]string{
-	"odd": {
+	"Odd": {
 		2:  "Plains",
 		3:  "SouthEast",
 		4:  "SouthEast",
@@ -269,7 +284,7 @@ var regions = map[string]map[int]string{
 		11: "NorthEast",
 		12: "NorthEast",
 	},
-	"even": {
+	"Even": {
 		2:  "SouthWest",
 		3:  "SouthCentral",
 		4:  "SouthCentral",
@@ -284,31 +299,29 @@ var regions = map[string]map[int]string{
 	},
 }
 
-func getRegion() string {
+func getRegion() (region string, redRoll int, roll int) {
 
-	oddOrEven := rollRedDie()
-	roll := rollDice(2)
-	region := regions[oddOrEven][roll]
+	oddOrEven, redRoll := rollRedDie()
+	roll = rollDice(2)
+	region = regions[oddOrEven][roll]
 
-	return region
+	return
 }
 
-func rollRedDie() string {
+func rollRedDie() (string, int) {
 	roll := rollDice(1)
 	if roll%2 == 0 {
-		return "even"
+		return "Even", roll
 	} else {
-		return "odd"
+		return "Odd", roll
 	}
 }
 
-func rollDice(quantity int) int {
-	total := 0
+func rollDice(quantity int) (total int) {
 
 	for i := 0; i < quantity; i++ {
-		rand.Seed(time.Now().UnixNano())
 		total += rand.Intn(6) + 1
 	}
 
-	return total
+	return
 }

@@ -23,9 +23,14 @@
     <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
   </head>
 
-  <body class="bg-gray-100 flex items-center justify-center h-screen">
+  <body class="bg-gray-100 flex flex-col items-center justify-center">
     <div class="text-center p-8">
+      <h1 class="text-4xl font-bold mb-4 text-indigo-700">
+        Rail Baron Destination Roller
+      </h1>
+
       {{ template "region-city.html" . }}
+
       <button
         class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:shadow-outline-blue active:bg-blue-800"
         hx-post="/destination"
@@ -35,5 +40,9 @@
         Roll Again
       </button>
     </div>
+
+    <div class="text-center p-8">{{ template "regions.html" . }}</div>
+
+    <div class="text-center p-8">{{ template "cities.html" . }}</div>
   </body>
 </html>
