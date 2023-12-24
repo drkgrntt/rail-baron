@@ -42,7 +42,12 @@ func main() {
 	})
 
 	http.HandleFunc("/destination", func(w http.ResponseWriter, r *http.Request) {
-		region, regionRedRoll, regionRoll := getRegion()
+		region := r.URL.Query().Get("region")
+		var regionRedRoll int
+		var regionRoll int
+		if region == "" {
+			region, regionRedRoll, regionRoll = getRegion()
+		}
 		city, cityRedRoll, cityRoll := getCity(region)
 
 		data := PageData{

@@ -1,20 +1,32 @@
-<div class="mx-auto bg-white p-4 rounded-md shadow-md">
+<div class="mx-auto bg-white p-3 rounded-md shadow-md">
   <h2 class="text-2xl font-bold mb-4 text-indigo-700">Cities</h2>
 
-  <div class="flex flex-wrap justify-center gap-2">
+  <div class="flex flex-wrap justify-evenly gap-2">
     {{ range $region, $oddEvenCities := .Cities }}
-    <div class="border p-4 mb-4 rounded-md">
+    <div class="shadow-md bg-gray-50 p-4 mb-4 rounded-md">
       <h3 class="text-lg font-semibold mb-2 text-gray-800">{{ $region }}</h3>
-      {{ range $oddEven, $monthCities := $oddEvenCities }}
-      <div class="mb-2">
-        <strong>{{ $oddEven }}:</strong>
-        <ul>
-          {{ range $month, $city := $monthCities }}
-          <li>{{ $month }}: {{ $city }}</li>
-          {{ end }}
-        </ul>
+
+      <div class="flex gap-2">
+        {{ range $oddEven, $monthCities := $oddEvenCities }}
+        <div class="mb-2 border p-4 rounded-md">
+          <strong>{{ $oddEven }}:</strong>
+          <ul>
+            {{ range $month, $city := $monthCities }}
+            <li>{{ $month }}: {{ $city }}</li>
+            {{ end }}
+          </ul>
+        </div>
+        {{ end }}
       </div>
-      {{ end }}
+
+      <button
+        hx-post="/destination?region={{ $region }}"
+        hx-swap="outerHTML"
+        hx-target="#region-city"
+        class="bg-rose-500 text-white px-2 py-1 rounded hover:bg-rose-600 focus:outline-none focus:shadow-outline-rose active:bg-rose-800"
+      >
+        Roll this region
+      </button>
     </div>
     {{ end }}
   </div>
