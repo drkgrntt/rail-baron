@@ -13,16 +13,19 @@ type PageData struct {
 	Cities        interface{}
 	City          string
 	RegionRedRoll int
-	RegionRoll    int
+	RegionRollOne int
+	RegionRollTwo int
 	CityRedRoll   int
-	CityRoll      int
+	CityRollOne   int
+	CityRollTwo   int
 }
 
 func main() {
 	templates := template.Must(template.ParseGlob("templates/*.html"))
+	templates = template.Must(templates.ParseGlob("templates/partials/*.html"))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		region, regionRedRoll, regionRoll := getRegion()
+		region, regionRedRoll, regionRolls := getRegion()
 		city, cityRedRoll, cityRoll := getCity(region)
 
 		data := PageData{
@@ -31,9 +34,11 @@ func main() {
 			Cities:        Cities,
 			City:          city,
 			RegionRedRoll: regionRedRoll,
-			RegionRoll:    regionRoll,
+			RegionRollOne: regionRolls[0],
+			RegionRollTwo: regionRolls[1],
 			CityRedRoll:   cityRedRoll,
-			CityRoll:      cityRoll,
+			CityRollOne:   cityRoll[0],
+			CityRollTwo:   cityRoll[1],
 		}
 
 		if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
@@ -44,9 +49,9 @@ func main() {
 	http.HandleFunc("/destination", func(w http.ResponseWriter, r *http.Request) {
 		region := r.URL.Query().Get("region")
 		var regionRedRoll int
-		var regionRoll int
+		regionRolls := append([]int{}, 0, 0)
 		if region == "" {
-			region, regionRedRoll, regionRoll = getRegion()
+			region, regionRedRoll, regionRolls = getRegion()
 		}
 		city, cityRedRoll, cityRoll := getCity(region)
 
@@ -54,9 +59,11 @@ func main() {
 			Region:        region,
 			City:          city,
 			RegionRedRoll: regionRedRoll,
-			RegionRoll:    regionRoll,
+			RegionRollOne: regionRolls[0],
+			RegionRollTwo: regionRolls[1],
 			CityRedRoll:   cityRedRoll,
-			CityRoll:      cityRoll,
+			CityRollOne:   cityRoll[0],
+			CityRollTwo:   cityRoll[1],
 		}
 
 		if err := templates.ExecuteTemplate(w, "region-city.html", data); err != nil {
@@ -67,26 +74,26 @@ func main() {
 	log.Fatal(http.ListenAndServe(":10101", nil))
 }
 
-func getCity(region string) (city string, redRoll int, roll int) {
+func getCity(region string) (city string, redRoll int, rolls []int) {
 
 	oddOrEven, redRoll := rollRedDie()
-	roll = rollDice(2)
-	city = Cities[region][oddOrEven][roll]
+	rolls = rollDice(2)
+	city = Cities[region][oddOrEven][rolls[0]+rolls[1]]
 
 	return
 }
 
-func getRegion() (region string, redRoll int, roll int) {
+func getRegion() (region string, redRoll int, rolls []int) {
 
 	oddOrEven, redRoll := rollRedDie()
-	roll = rollDice(2)
-	region = Regions[oddOrEven][roll]
+	rolls = rollDice(2)
+	region = Regions[oddOrEven][rolls[0]+rolls[1]]
 
 	return
 }
 
 func rollRedDie() (string, int) {
-	roll := rollDice(1)
+	roll := rollDice(1)[0]
 	if roll%2 == 0 {
 		return "Even", roll
 	} else {
@@ -94,10 +101,10 @@ func rollRedDie() (string, int) {
 	}
 }
 
-func rollDice(quantity int) (total int) {
+func rollDice(quantity int) (rolls []int) {
 
 	for i := 0; i < quantity; i++ {
-		total += rand.Intn(6) + 1
+		rolls = append(rolls, rand.Intn(6)+1)
 	}
 
 	return
